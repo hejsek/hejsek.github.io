@@ -1,37 +1,167 @@
-## Welcome to GitHub Pages
+## How to display Angular 2 applications in the user’s browser language
 
-You can use the [editor on GitHub](https://github.com/hejsek/hejsek.github.io/edit/master/index.md) to maintain and preview the content for your website in Markdown files.
+Our mission today is to dynamically translate your Angular 2+ application to the user’s browser language. I tried to develop this solution with an emphasis on performance and simplicity. 
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+Language translation format:
+We are going to store our language versions in JSON format. I decided to use this because you can easily convert JSON to objects and afterwards work with it easily.
 
-### Markdown
-
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
-
-```markdown
-Syntax highlighted code block
-
-# Header 1
-## Header 2
-### Header 3
-
-- Bulleted
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
+```javascript
+{
+   "en": {
+       "work": "Work",
+       "hello": "Hello"
+   },
+   "de": {
+       "work": "Arbeit",
+       "hello": "Allo"
+   }
+}
 ```
 
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
+I think that this is kind of self-explanatory.
 
-### Jekyll Themes
+Ok, after we have prepared our language versions for English and German we will actually be coding something! Angular has a cool feature called Pipes. Pipes basically transforms input data into a desired output. In our case the pipe will convert the input string into the translation of that string. 
+Afterwards you can simply translate the word “hello” in templates like this:
 
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/hejsek/hejsek.github.io/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
+```html
+<h1>
+ Translation: {{"hello" | translate}}
+</h1>
+```
+That’s all. Sounds simple, right? Well it is.
 
-### Support or Contact
+First, we must create a file called **translations.pipe.ts**. If you are using angular-cli, which I strongly suggest you all do, you will have to type “ng generate pipe translations” into the command line in your angular-cli project folder.
 
-Having trouble with Pages? Check out our [documentation](https://help.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
+After successfully creating the desired pipe we can start to code. This is the head of our code: 
+```typescript
+// Import Angular Pipe Utilities
+import {Pipe, PipeTransform} from "@angular/core";
+
+// Enter the keyword to invoke the Pipe in templates via @Pipe decorator
+@Pipe({
+ name: 'translate'
+})
+
+export class TranslationsPipe implements PipeTransform {
+  /*
+    Our code will be here
+  */
+}
+```
+
+Now for the actual functionality.
+Every Pipe must have a method called *transform*, with the following format: **transform(value: any, args?: any)**. When the pipe is applied to data, the data are always sent to the *transform()* method where they are processed and returned. 
+
+This was a simple introduction to how Pipes work and now we can get to the code itself.
+I tried to add comments to every piece of code so it should be easily understandable for everyone.
+
+Our **translations.pipe.ts** will look like this:
+
+```typescript
+// Import Angular Pipe Utilities
+import {Pipe, PipeTransform} from "@angular/core";
+
+// Create name of our pipe used in templates via @Pipe decorator
+@Pipe({
+ name: 'translate'
+})
+
+// Pipes itself
+export class TranslationsPipe implements PipeTransform {
+ // Default Pipe input method
+ transform(inputString: any, args?: any): any {
+   // Get current browser language in the form of a short string. For example 'en', 'fr' etc.
+   let language = 'en';
+
+   // Get translations for given language
+   let translationsForLanguage = this.translations(language);
+
+   try {
+     // Parse string formatted in JSON to object for given language
+     let translation = translationsForLanguage[inputString];
+
+     // If translation does not exist in this language, the original input string is returned
+     if (typeof translation === 'undefined') {
+       console.log("Translation wasn't found for string " + inputString);
+       return inputString;
+     }
+
+     return translation;
+   } catch (e) {
+     console.log("Translation wasn't found for string " + inputString);
+     return inputString;
+   }
+ }
+
+ // returns JSON object in given language
+ translations(language: string) {
+   // Translations in JSON format
+   let json = TranslationsPipe.translationsJson();
+
+   // Parse JSON string to object
+   let translations = JSON.parse(json);
+
+   // Get translations only for specified language
+   let translationsForLanguage = translations[language];
+
+   // If translations for input language wasn't found, the English version is returned
+   if (typeof translationsForLanguage === 'undefined') {
+     console.log("Translations for language " + language + " wasn't found.");
+     return JSON.parse(json)['en'];
+   }
+
+   return translationsForLanguage;
+ }
+
+ // This is a static function where our translations are stored
+ static translationsJson() {
+   let json = `
+       {
+           "en": {
+               "work": "Work",
+               "hello": "Hello"
+           },
+           "de": {
+               "work": "Arbeit",
+               "hello": "Allo"
+           }
+       }
+       `;
+
+   return json;
+ }
+}
+```
+
+******Note*****
+If you are not using angular-cli you must set a declaration in your **app.module.ts** under @NgModule directive.
+
+It will look like this:
+```typescript
+import { BrowserModule } from '@angular/platform-browser';
+import { NgModule } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { HttpModule } from '@angular/http';
+
+import { AppComponent } from './app.component';
+import { TranslationsPipe } from './translations.pipe';       //<---------- This must be added manually
+
+@NgModule({
+ declarations: [
+   AppComponent,
+   TranslationsPipe       //<---------- This must be added manually
+ ],
+ imports: [
+   BrowserModule,
+   FormsModule,
+   HttpModule
+ ],
+ providers: [],
+ bootstrap: [AppComponent]
+})
+export class AppModule {
+}
+```
+
+Hope it helps!
+
