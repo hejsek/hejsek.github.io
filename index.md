@@ -69,16 +69,16 @@ import {Pipe, PipeTransform} from "@angular/core";
 // Pipes itself
 export class TranslationsPipe implements PipeTransform {
  // Default Pipe input method
- transform(inputString: any, args?: any): any {
+ transform(inputString: string): string {
    // Get current browser language in the form of a short string. For example 'en', 'fr' etc.
-   let language = 'en';
+   const language = 'en';
 
    // Get translations for given language
-   let translationsForLanguage = this.translations(language);
+   const translationsForLanguage = this.translations(language);
 
    try {
      // Parse string formatted in JSON to object for given language
-     let translation = translationsForLanguage[inputString];
+     const translation = translationsForLanguage[inputString];
 
      // If translation does not exist in this language, the original input string is returned
      if (typeof translation === 'undefined') {
@@ -96,13 +96,13 @@ export class TranslationsPipe implements PipeTransform {
  // returns JSON object in given language
  translations(language: string) {
    // Translations in JSON format
-   let json = TranslationsPipe.translationsJson();
+   const json = TranslationsPipe.translationsJson();
 
    // Parse JSON string to object
-   let translations = JSON.parse(json);
+   const translations = JSON.parse(json);
 
    // Get translations only for specified language
-   let translationsForLanguage = translations[language];
+   const translationsForLanguage = translations[language];
 
    // If translations for input language wasn't found, the English version is returned
    if (typeof translationsForLanguage === 'undefined') {
@@ -115,7 +115,7 @@ export class TranslationsPipe implements PipeTransform {
 
  // This is a static function where our translations are stored
  static translationsJson() {
-   let json = `
+   const json = `
        {
            "en": {
                "work": "Work",
