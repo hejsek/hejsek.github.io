@@ -4,6 +4,8 @@ Our mission today is to dynamically translate your Angular 2+ application to the
 
 Language translation format:
 We are going to store our language versions in JSON format. I decided to use this because you can easily convert JSON to objects and afterwards work with it easily.
+Ofcourse storing all translations in one file is not a good idea so we are going to do it only for purpose of this tutorial to show you only how pipes works.
+In next chapter we are going to solve this by requesting server for user language specifically.
 
 ```javascript
 {
